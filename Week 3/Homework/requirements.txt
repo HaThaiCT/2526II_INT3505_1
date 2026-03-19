@@ -1,2 +1,4 @@
-flask==2.3.3
-flasgger==0.9.7.1
+Flask==2.3.3
+Flasgger==0.9.7.1
+flask-cors==4.0.0
+Werkzeug==2.3.7

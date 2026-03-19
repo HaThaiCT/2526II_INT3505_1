@@ -1,0 +1,239 @@
+openapi: 3.0.3
+info:
+  title: Simple Books Management API
+  version: 1.0.0
+  description: |
+    Simple Books Management API với Flask.
+    
+    API này cung cấp các chức năng:
+    - Lấy danh sách tất cả sách
+    - Tạo sách mới
+    - Lấy chi tiết sách theo ID
+    - Cập nhật thông tin sách
+    - Xóa sách
+    
+    **Lưu ý**: API sử dụng bộ nhớ trong (in-memory) để lưu trữ dữ liệu, nên dữ liệu sẽ mất khi khởi động lại server.
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+  - url: http://127.0.0.1:5000
+    description: Localhost alternative
+
+tags:
+  - name: Books
+    description: Các thao tác quản lý sách
+
+paths:
+  /:
+    get:
+      tags:
+        - Books
+      summary: API Home Page
+      description: Lấy thông tin chung về API
+      responses:
+        "200":
+          description: Thông tin API
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  version:
+                    type: string
+                  docs_url:
+                    type: string
+                  endpoints:
+                    type: object
+
+  /books:
+    get:
+      tags:
+        - Books
+      summary: Lấy danh sách sách
+      description: Lấy danh sách tất cả các sách có sẵn
+      responses:
+        "200":
+          description: Danh sách sách
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Book"
+              examples:
+                books:
+                  value:
+                    - id: "1"
+                      title: "Clean Code"
+                      author: "Robert C. Martin"
+                      publishedYear: 2008
+                      genre: "Software Engineering"
+                    - id: "2"
+                      title: "The Pragmatic Programmer"
+                      author: "Andrew Hunt, David Thomas"
+                      publishedYear: 1999
+                      genre: "Programming"
+
+    post:
+      tags:
+        - Books
+      summary: Tạo sách mới
+      description: Tạo một sách mới trong hệ thống
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewBook"
+            examples:
+              book:
+                value:
+                  title: "Clean Architecture"
+                  author: "Robert C. Martin"
+                  publishedYear: 2017
+                  genre: "Software Architecture"
+      responses:
+        "201":
+          description: Sách được tạo thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "400":
+          description: Dữ liệu đầu vào không hợp lệ
+
+  /books/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: ID duy nhất của sách
+        example: "1"
+
+    get:
+      tags:
+        - Books
+      summary: Lấy chi tiết sách theo ID
+      description: Lấy thông tin chi tiết của một sách cụ thể
+      responses:
+        "200":
+          description: Thông tin chi tiết sách
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "404":
+          description: Sách không tìm thấy
+
+    put:
+      tags:
+        - Books
+      summary: Cập nhật sách
+      description: Cập nhật thông tin của một sách
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewBook"
+            examples:
+              book:
+                value:
+                  title: "Clean Code (Updated)"
+                  author: "Robert C. Martin"
+                  publishedYear: 2008
+                  genre: "Software Engineering"
+      responses:
+        "200":
+          description: Sách được cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "404":
+          description: Sách không tìm thấy
+        "400":
+          description: Dữ liệu đầu vào không hợp lệ
+
+    delete:
+      tags:
+        - Books
+      summary: Xóa sách
+      description: Xóa một sách khỏi hệ thống
+      responses:
+        "204":
+          description: Sách được xóa thành công
+        "404":
+          description: Sách không tìm thấy
+
+components:
+  schemas:
+    Book:
+      type: object
+      required:
+        - id
+        - title
+        - author
+        - publishedYear
+      properties:
+        id:
+          type: string
+          description: ID duy nhất của sách
+          example: "1"
+        title:
+          type: string
+          description: Tên sách
+          example: "Clean Code"
+        author:
+          type: string
+          description: Tác giả
+          example: "Robert C. Martin"
+        publishedYear:
+          type: integer
+          description: Năm xuất bản
+          example: 2008
+          minimum: 1000
+          maximum: 2100
+        genre:
+          type: string
+          description: Thể loại (tùy chọn)
+          example: "Software Engineering"
+
+    NewBook:
+      type: object
+      required:
+        - title
+        - author
+        - publishedYear
+      properties:
+        title:
+          type: string
+          description: Tên sách
+          example: "Clean Code"
+        author:
+          type: string
+          description: Tác giả
+          example: "Robert C. Martin"
+        publishedYear:
+          type: integer
+          description: Năm xuất bản
+          example: 2008
+          minimum: 1000
+          maximum: 2100
+        genre:
+          type: string
+          description: Thể loại (tùy chọn)
+          example: "Software Engineering"
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Mô tả lỗi
+          example: "Book not found"
