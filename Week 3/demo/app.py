@@ -1,184 +1,80 @@
-from flask import Flask, jsonify, request, redirect
-from flasgger import Swagger
+from flask import Flask, jsonify, request
+from flasgger import Flasgger
+import json
 
 app = Flask(__name__)
-swagger = Swagger(app)
 
-@app.route('/')
-def home():
-    return redirect('/apidocs')
 
-# Mock data
-users = [
-    {"id": 1, "name": "Nguyen Van A", "email": "a@example.com"},
-    {"id": 2, "name": "Tran Thi B", "email": "b@example.com"},
-    {"id": 3, "name": "Le Van C", "email": "c@example.com"}
+with open('openapi.yaml', 'r', encoding='utf-8') as f:
+    openapi_spec = f.read()
+
+
+swag = Flasgger(app, spec=json.loads(json.dumps({
+    'swagger': '3.0.0',
+})))
+
+
+books = [
+    {'id': 1, 'title': 'Python Basics', 'author': 'John Doe', 'year': 2020, 'isbn': '123-456'},
+    {'id': 2, 'title': 'REST API Design', 'author': 'Jane Smith', 'year': 2021, 'isbn': '789-012'},
 ]
 
-@app.route('/api/v1/users', methods=['GET'])
-def get_users():
-    """
-    List all users
-    ---
-    responses:
-      200:
-        description: A list of users
-        schema:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                type: integer
-              name:
-                type: string
-              email:
-                type: string
-    """
-    return jsonify(users)
+next_id = 3
 
-@app.route('/api/v1/users/<int:id>', methods=['GET'])
-def get_user(id):
-    """
-    Get one user by ID
-    ---
-    parameters:
-      - name: id
-        in: path
-        type: integer
-        required: true
-        description: The user ID
-    responses:
-      200:
-        description: A single user
-        schema:
-          type: object
-          properties:
-            id:
-              type: integer
-            name:
-              type: string
-            email:
-              type: string
-      404:
-        description: User not found
-    """
-    user = next((user for user in users if user["id"] == id), None)
-    if user:
-        return jsonify(user)
-    return jsonify({"message": "User not found"}), 404
+@app.route('/books', methods=['GET'])
+def get_books():
+    """Get all books"""
+    return jsonify(books), 200
 
-@app.route('/api/v1/users', methods=['POST'])
-def create_user():
-    """
-    Create a new user
-    ---
-    parameters:
-      - name: body
-        in: body
-        required: true
-        schema:
-          type: object
-          required:
-            - name
-            - email
-          properties:
-            name:
-              type: string
-            email:
-              type: string
-    responses:
-      201:
-        description: User created
-        schema:
-          type: object
-          properties:
-            id:
-              type: integer
-            name:
-              type: string
-            email:
-              type: string
-    """
+@app.route('/books', methods=['POST'])
+def create_book():
+    """Create a new book"""
+    global next_id
     data = request.get_json()
-    new_id = max(user["id"] for user in users) + 1 if users else 1
-    new_user = {
-        "id": new_id,
-        "name": data.get("name"),
-        "email": data.get("email")
+    
+    if not data or 'title' not in data or 'author' not in data:
+        return jsonify({'error': 'Missing required fields'}), 400
+    
+    new_book = {
+        'id': next_id,
+        'title': data.get('title'),
+        'author': data.get('author'),
+        'year': data.get('year'),
+        'isbn': data.get('isbn')
     }
-    users.append(new_user)
-    return jsonify(new_user), 201
+    books.append(new_book)
+    next_id += 1
+    return jsonify(new_book), 201
 
-@app.route('/api/v1/users/<int:id>', methods=['PUT'])
-def update_user(id):
-    """
-    Update a user
-    ---
-    parameters:
-      - name: id
-        in: path
-        type: integer
-        required: true
-        description: The user ID
-      - name: body
-        in: body
-        required: true
-        schema:
-          type: object
-          properties:
-            name:
-              type: string
-            email:
-              type: string
-    responses:
-      200:
-        description: User updated
-        schema:
-          type: object
-          properties:
-            id:
-              type: integer
-            name:
-              type: string
-            email:
-              type: string
-      404:
-        description: User not found
-    """
-    user = next((user for user in users if user["id"] == id), None)
-    if not user:
-        return jsonify({"message": "User not found"}), 404
+@app.route('/books/<int:book_id>', methods=['GET'])
+def get_book(book_id):
+    """Get a book by ID"""
+    book = next((b for b in books if b['id'] == book_id), None)
+    if book:
+        return jsonify(book), 200
+    return jsonify({'error': 'Book not found'}), 404
+
+@app.route('/books/<int:book_id>', methods=['PUT'])
+def update_book(book_id):
+    """Update a book"""
+    book = next((b for b in books if b['id'] == book_id), None)
+    if not book:
+        return jsonify({'error': 'Book not found'}), 404
     
     data = request.get_json()
-    user["name"] = data.get("name", user["name"])
-    user["email"] = data.get("email", user["email"])
-    return jsonify(user)
+    book.update({k: v for k, v in data.items() if v is not None})
+    return jsonify(book), 200
 
-@app.route('/api/v1/users/<int:id>', methods=['DELETE'])
-def delete_user(id):
-    """
-    Delete a user
-    ---
-    parameters:
-      - name: id
-        in: path
-        type: integer
-        required: true
-        description: The user ID
-    responses:
-      200:
-        description: User deleted
-      404:
-        description: User not found
-    """
-    global users
-    user = next((user for user in users if user["id"] == id), None)
-    if not user:
-        return jsonify({"message": "User not found"}), 404
-    
-    users = [u for u in users if u["id"] != id]
-    return jsonify({"message": "User deleted successfully"})
+@app.route('/books/<int:book_id>', methods=['DELETE'])
+def delete_book(book_id):
+    """Delete a book"""
+    global books
+    book = next((b for b in books if b['id'] == book_id), None)
+    if book:
+        books = [b for b in books if b['id'] != book_id]
+        return '', 204
+    return jsonify({'error': 'Book not found'}), 404
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    print('Open http://localhost:5000/apidocs')
+    app.run(debug=True, host='0.0.0.0', port=5000)
