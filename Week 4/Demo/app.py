@@ -67,7 +67,7 @@ def delete_book(id):
 
 @app.get("/openapi.yaml")
 def openapi_spec():
-    return send_from_directory(".", "openapi.yaml")
+    return send_from_directory(".", "openapi.yml")
 
 @app.get("/docs")
 def swagger_ui():
