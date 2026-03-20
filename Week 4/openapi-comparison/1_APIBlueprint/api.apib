@@ -1,0 +1,47 @@
+FORMAT: 1A
+HOST: http://api.library.com
+
+# Library API
+API quản lý thư viện đơn giản.
+
+## Books Collection [/books]
+
+### Danh sách các cuốn sách [GET]
++ Response 200 (application/json)
+
+        [
+            {
+                "id": "1",
+                "title": "Clean Code",
+                "author": "Robert C. Martin"
+            }
+        ]
+
+### Thêm sách mới [POST]
++ Request (application/json)
+
+        {
+            "id": "2",
+            "title": "Pragmatic Programmer",
+            "author": "Andrew Hunt"
+        }
+
++ Response 201 (application/json)
+
+## Book [/books/{id}]
++ Parameters
+    + id: `1` (string, required) - ID của cuốn sách
+
+### Sửa thông tin sách [PUT]
++ Request (application/json)
+
+        {
+            "id": "1",
+            "title": "Clean Code Updated",
+            "author": "Robert C. Martin"
+        }
+
++ Response 200 (application/json)
+
+### Xóa sách [DELETE]
++ Response 204

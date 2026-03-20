@@ -1,0 +1,45 @@
+#%RAML 1.0
+title: Library API
+version: 1.0.0
+baseUri: http://api.library.com/v1
+
+types:
+  Book:
+    type: object
+    properties:
+      id: string
+      title: string
+      author: string
+
+/books:
+  get:
+    description: Lấy danh sách sách
+    responses:
+      200:
+        body:
+          application/json:
+            type: Book[]
+  post:
+    description: Thêm sách mới
+    body:
+      application/json:
+        type: Book
+    responses:
+      201:
+        description: Đã tạo sách mới
+  /{id}:
+    uriParameters:
+      id: string
+    put:
+      description: Cập nhật thông tin sách
+      body:
+        application/json:
+          type: Book
+      responses:
+        200:
+          description: Cập nhật thành công
+    delete:
+      description: Xóa sách
+      responses:
+        204:
+          description: Xóa thành công

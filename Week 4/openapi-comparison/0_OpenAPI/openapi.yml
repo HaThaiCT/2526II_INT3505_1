@@ -1,0 +1,64 @@
+openapi: 3.0.3
+info:
+  title: Library API
+  version: 1.0.0
+  description: API quản lý thư viện
+paths:
+  /books:
+    get:
+      summary: Lấy danh sách sách
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Book'
+    post:
+      summary: Thêm sách mới
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+      responses:
+        '201':
+          description: Đã tạo
+  /books/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: ID của cuốn sách
+    put:
+      summary: Cập nhật thông tin sách
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book'
+      responses:
+        '200':
+          description: Cập nhật thành công
+    delete:
+      summary: Xóa sách
+      responses:
+        '204':
+          description: Xóa thành công
+components:
+  schemas:
+    Book:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        author:
+          type: string
