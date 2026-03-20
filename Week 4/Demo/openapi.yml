@@ -6,6 +6,8 @@ info:
 servers:
   - url: http://localhost:5000
     description: Local development server
+  - url : https://demo-books-api.vercel.app
+    description: Deployed server
 tags:
   - name: Books
     description: Book catalog operations
