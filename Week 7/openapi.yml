@@ -1,0 +1,280 @@
+openapi: 3.0.0
+info:
+  title: Product Management API
+  description: API để quản lý sản phẩm với CRUD operations
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:5000
+    description: Development server
+
+tags:
+  - name: Products
+    description: Quản lý sản phẩm
+
+paths:
+  /products:
+    get:
+      tags:
+        - Products
+      summary: Lấy danh sách tất cả sản phẩm
+      description: Trả về danh sách tất cả sản phẩm trong database
+      operationId: getProducts
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+                  count:
+                    type: integer
+                    example: 10
+
+    post:
+      tags:
+        - Products
+      summary: Tạo sản phẩm mới
+      description: Thêm sản phẩm mới vào database
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '201':
+          description: Tạo thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Product'
+                  message:
+                    type: string
+                    example: Product created successfully
+        '400':
+          description: Dữ liệu không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /products/{productId}:
+    get:
+      tags:
+        - Products
+      summary: Lấy thông tin một sản phẩm
+      description: Trả về thông tin chi tiết của một sản phẩm theo ID
+      operationId: getProductById
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          description: ID của sản phẩm
+          schema:
+            type: string
+            example: "507f1f77bcf86cd799439011"
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Product'
+        '404':
+          description: Không tìm thấy sản phẩm
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      tags:
+        - Products
+      summary: Cập nhật sản phẩm
+      description: Cập nhật thông tin sản phẩm theo ID
+      operationId: updateProduct
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          description: ID của sản phẩm
+          schema:
+            type: string
+            example: "507f1f77bcf86cd799439011"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Product'
+                  message:
+                    type: string
+                    example: Product updated successfully
+        '404':
+          description: Không tìm thấy sản phẩm
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Products
+      summary: Xóa sản phẩm
+      description: Xóa sản phẩm theo ID
+      operationId: deleteProduct
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          description: ID của sản phẩm
+          schema:
+            type: string
+            example: "507f1f77bcf86cd799439011"
+      responses:
+        '200':
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Product deleted successfully
+        '404':
+          description: Không tìm thấy sản phẩm
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: MongoDB ObjectId
+          example: "507f1f77bcf86cd799439011"
+        name:
+          type: string
+          description: Tên sản phẩm
+          example: "iPhone 15 Pro Max"
+        description:
+          type: string
+          description: Mô tả sản phẩm
+          example: "Flagship smartphone from Apple"
+        price:
+          type: number
+          format: float
+          description: Giá sản phẩm (VND)
+          example: 29990000
+        category:
+          type: string
+          description: Danh mục sản phẩm
+          example: "Electronics"
+        stock:
+          type: integer
+          description: Số lượng tồn kho
+          example: 50
+        createdAt:
+          type: string
+          format: date-time
+          description: Thời gian tạo
+          example: "2024-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Thời gian cập nhật
+          example: "2024-01-16T14:20:00Z"
+
+    ProductInput:
+      type: object
+      required:
+        - name
+        - price
+        - category
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Tên sản phẩm
+          example: "iPhone 15 Pro Max"
+        description:
+          type: string
+          maxLength: 1000
+          description: Mô tả sản phẩm
+          example: "Flagship smartphone from Apple"
+        price:
+          type: number
+          format: float
+          minimum: 0
+          description: Giá sản phẩm (VND)
+          example: 29990000
+        category:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Danh mục sản phẩm
+          example: "Electronics"
+        stock:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Số lượng tồn kho
+          example: 50
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Thông báo lỗi
+          example: "Product not found"

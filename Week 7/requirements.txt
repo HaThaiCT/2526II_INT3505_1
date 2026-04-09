@@ -1,0 +1,15 @@
+# Flask Framework
+Flask==3.0.0
+
+# MongoDB Integration
+Flask-PyMongo==2.3.0
+pymongo==4.6.1
+
+# CORS Support (optional - for frontend integration)
+Flask-CORS==4.0.0
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# OpenAPI/Swagger Documentation (optional)
+flask-swagger-ui==4.11.1

@@ -7,6 +7,7 @@ const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const userRoutes = require('./routes/user');
+const demoRoutes = require('./routes/demo');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,17 +27,33 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/demo', demoRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
     success: true,
-    message: 'Library Management API',
-    version: '1.0.0',
+    message: 'Library Management API with JWT, Refresh Tokens, Roles & Scopes',
+    version: '2.0.0',
     endpoints: {
       auth: {
         register: 'POST /api/auth/register',
-        login: 'POST /api/auth/login'
+        login: 'POST /api/auth/login',
+        refresh: 'POST /api/auth/refresh - Refresh access token',
+        logout: 'POST /api/auth/logout - Revoke refresh token',
+        logoutAll: 'POST /api/auth/logout-all - Revoke all user tokens'
+      },
+      demo: {
+        public: 'GET /api/demo/public - Public endpoint',
+        authenticated: 'GET /api/demo/authenticated - Requires auth',
+        booksRead: 'GET /api/demo/books-read - Requires books:read scope',
+        booksWrite: 'POST /api/demo/books-write - Requires books:write scope',
+        booksDelete: 'DELETE /api/demo/books-delete/:id - Requires books:delete scope',
+        usersAny: 'GET /api/demo/users-any - Requires users:read OR users:write',
+        booksFullAccess: 'POST /api/demo/books-full-access - Requires ALL book scopes',
+        adminOnly: 'DELETE /api/demo/admin-only - Admin only',
+        myScopes: 'GET /api/demo/my-scopes - View your scopes',
+        scopeInfo: 'GET /api/demo/scope-info - Scope documentation'
       },
       admin: {
         books: 'GET/POST /api/admin/books',
@@ -54,6 +71,12 @@ app.get('/', (req, res) => {
         myBorrows: 'GET /api/user/my-borrows',
         myActiveBorrows: 'GET /api/user/my-active-borrows'
       }
+    },
+    features: {
+      accessTokens: 'Short-lived JWT tokens (15m-24h)',
+      refreshTokens: 'Long-lived tokens for refreshing access (7 days)',
+      roles: ['admin', 'user'],
+      scopes: ['books:read', 'books:write', 'books:delete', 'users:read', 'users:write', 'users:delete', 'borrow:own', 'borrow:all']
     }
   });
 });

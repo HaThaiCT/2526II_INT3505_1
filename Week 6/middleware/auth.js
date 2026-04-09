@@ -33,7 +33,8 @@ const authenticateToken = (req, res, next) => {
     req.user = {
       userId: decoded.userId,
       username: decoded.username,
-      role: decoded.role
+      role: decoded.role,
+      scopes: decoded.scopes || []
     };
     next();
   });
@@ -61,8 +62,67 @@ const isUser = (req, res, next) => {
   next();
 };
 
+// Check if user has required scope(s)
+const requireScope = (...requiredScopes) => {
+  return (req, res, next) => {
+    if (!req.user || !req.user.scopes) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'No scopes found' 
+      });
+    }
+
+    // Check if user has ANY of the required scopes
+    const hasScope = requiredScopes.some(scope => 
+      req.user.scopes.includes(scope)
+    );
+
+    if (!hasScope) {
+      return res.status(403).json({ 
+        success: false, 
+        message: `Required scope: ${requiredScopes.join(' or ')}`,
+        userScopes: req.user.scopes
+      });
+    }
+
+    next();
+  };
+};
+
+// Check if user has ALL required scopes
+const requireAllScopes = (...requiredScopes) => {
+  return (req, res, next) => {
+    if (!req.user || !req.user.scopes) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'No scopes found' 
+      });
+    }
+
+    // Check if user has ALL of the required scopes
+    const hasAllScopes = requiredScopes.every(scope => 
+      req.user.scopes.includes(scope)
+    );
+
+    if (!hasAllScopes) {
+      const missingScopes = requiredScopes.filter(scope => 
+        !req.user.scopes.includes(scope)
+      );
+      return res.status(403).json({ 
+        success: false, 
+        message: `Missing required scopes: ${missingScopes.join(', ')}`,
+        userScopes: req.user.scopes
+      });
+    }
+
+    next();
+  };
+};
+
 module.exports = {
   authenticateToken,
   isAdmin,
-  isUser
+  isUser,
+  requireScope,
+  requireAllScopes
 };
