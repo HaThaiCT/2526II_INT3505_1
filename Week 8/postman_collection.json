@@ -1,0 +1,634 @@
+{
+	"info": {
+		"_postman_id": "library-api-tests-2024",
+		"name": "Library Management API - Test Suite",
+		"description": "Comprehensive test suite for Library Management API with 5 main endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Setup - Reset Data",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Reset should succeed', function () {",
+							"    pm.response.to.have.status(200);",
+							"    pm.expect(pm.response.json().success).to.be.true;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/books/reset",
+					"host": ["{{base_url}}"],
+					"path": ["books", "reset"]
+				},
+				"description": "Reset data to initial state before running tests"
+			},
+			"response": []
+		},
+		{
+			"name": "1. Get All Books",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Test 1: Status code should be 200",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Test 2: Response should be JSON",
+							"pm.test('Response is JSON', function () {",
+							"    pm.response.to.be.json;",
+							"});",
+							"",
+							"// Test 3: Response should have required fields",
+							"pm.test('Response has required fields', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('success');",
+							"    pm.expect(jsonData).to.have.property('count');",
+							"    pm.expect(jsonData).to.have.property('books');",
+							"});",
+							"",
+							"// Test 4: Books should be an array",
+							"pm.test('Books is an array', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.books).to.be.an('array');",
+							"});",
+							"",
+							"// Test 5: Initial data should have 3 books",
+							"pm.test('Initial data has 3 books', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.count).to.equal(3);",
+							"    pm.expect(jsonData.books).to.have.lengthOf(3);",
+							"});",
+							"",
+							"// Test 6: Each book should have required properties",
+							"pm.test('Books have required properties', function () {",
+							"    const jsonData = pm.response.json();",
+							"    jsonData.books.forEach(book => {",
+							"        pm.expect(book).to.have.property('id');",
+							"        pm.expect(book).to.have.property('title');",
+							"        pm.expect(book).to.have.property('author');",
+							"        pm.expect(book).to.have.property('isbn');",
+							"        pm.expect(book).to.have.property('year');",
+							"        pm.expect(book).to.have.property('available');",
+							"    });",
+							"});",
+							"",
+							"// Save first book ID for later tests",
+							"const jsonData = pm.response.json();",
+							"if (jsonData.books.length > 0) {",
+							"    pm.environment.set('existing_book_id', jsonData.books[0].id);",
+							"    pm.environment.set('existing_book_isbn', jsonData.books[0].isbn);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/books",
+					"host": ["{{base_url}}"],
+					"path": ["books"]
+				},
+				"description": "Get all books from the library"
+			},
+			"response": []
+		},
+		{
+			"name": "2. Get Book by ID",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Test 1: Status code should be 200",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Test 2: Response should have success and book",
+							"pm.test('Response has success and book', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData).to.have.property('book');",
+							"});",
+							"",
+							"// Test 3: Book ID should match requested ID",
+							"pm.test('Book ID matches requested ID', function () {",
+							"    const jsonData = pm.response.json();",
+							"    const requestedId = parseInt(pm.environment.get('existing_book_id'));",
+							"    pm.expect(jsonData.book.id).to.equal(requestedId);",
+							"});",
+							"",
+							"// Test 4: Book should have all required fields",
+							"pm.test('Book has all required fields', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.book).to.have.all.keys('id', 'title', 'author', 'isbn', 'year', 'available', 'created_at');",
+							"});",
+							"",
+							"// Test 5: Response time should be less than 200ms",
+							"pm.test('Response time is less than 200ms', function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/books/{{existing_book_id}}",
+					"host": ["{{base_url}}"],
+					"path": ["books", "{{existing_book_id}}"]
+				},
+				"description": "Get a specific book by ID"
+			},
+			"response": []
+		},
+		{
+			"name": "2b. Get Non-Existent Book",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Test 1: Status code should be 404",
+							"pm.test('Status code is 404 for non-existent book', function () {",
+							"    pm.response.to.have.status(404);",
+							"});",
+							"",
+							"// Test 2: Response should indicate failure",
+							"pm.test('Response indicates failure', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.false;",
+							"    pm.expect(jsonData).to.have.property('error');",
+							"});",
+							"",
+							"// Test 3: Error message should be appropriate",
+							"pm.test('Error message is appropriate', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.error).to.equal('Book not found');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/books/99999",
+					"host": ["{{base_url}}"],
+					"path": ["books", "99999"]
+				},
+				"description": "Test error handling for non-existent book"
+			},
+			"response": []
+		},
+		{
+			"name": "3. Create New Book",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Test 1: Status code should be 201",
+							"pm.test('Status code is 201', function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"// Test 2: Response should indicate success",
+							"pm.test('Response indicates success', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData).to.have.property('message');",
+							"    pm.expect(jsonData).to.have.property('book');",
+							"});",
+							"",
+							"// Test 3: Created book should have an ID",
+							"pm.test('Created book has an ID', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.book).to.have.property('id');",
+							"    pm.expect(jsonData.book.id).to.be.a('number');",
+							"    // Save for update and delete tests",
+							"    pm.environment.set('new_book_id', jsonData.book.id);",
+							"});",
+							"",
+							"// Test 4: Book data should match input",
+							"pm.test('Book data matches input', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.book.title).to.equal('Test Book');",
+							"    pm.expect(jsonData.book.author).to.equal('Test Author');",
+							"    pm.expect(jsonData.book.isbn).to.equal('978-1234567890');",
+							"    pm.expect(jsonData.book.year).to.equal(2024);",
+							"});",
+							"",
+							"// Test 5: Book should have created_at timestamp",
+							"pm.test('Book has created_at timestamp', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.book).to.have.property('created_at');",
+							"    pm.expect(jsonData.book.created_at).to.match(/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}/);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"title\": \"Test Book\",\n    \"author\": \"Test Author\",\n    \"isbn\": \"978-1234567890\",\n    \"year\": 2024,\n    \"available\": true\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/books",
+					"host": ["{{base_url}}"],
+					"path": ["books"]
+				},
+				"description": "Create a new book in the library"
+			},
+			"response": []
+		},
+		{
+			"name": "3b. Create Book - Missing Fields",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Test 1: Status code should be 400",
+							"pm.test('Status code is 400 for missing fields', function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"// Test 2: Response should indicate failure",
+							"pm.test('Response indicates failure', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.false;",
+							"    pm.expect(jsonData).to.have.property('error');",
+							"});",
+							"",
+							"// Test 3: Error should mention missing field",
+							"pm.test('Error mentions missing field', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.error).to.include('Missing required field');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"title\": \"Incomplete Book\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/books",
+					"host": ["{{base_url}}"],
+					"path": ["books"]
+				},
+				"description": "Test validation for missing required fields"
+			},
+			"response": []
+		},
+		{
+			"name": "3c. Create Book - Duplicate ISBN",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Test 1: Status code should be 409",
+							"pm.test('Status code is 409 for duplicate ISBN', function () {",
+							"    pm.response.to.have.status(409);",
+							"});",
+							"",
+							"// Test 2: Response should indicate conflict",
+							"pm.test('Response indicates conflict', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.false;",
+							"    pm.expect(jsonData.error).to.include('ISBN already exists');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"title\": \"Duplicate Book\",\n    \"author\": \"Some Author\",\n    \"isbn\": \"{{existing_book_isbn}}\",\n    \"year\": 2024\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/books",
+					"host": ["{{base_url}}"],
+					"path": ["books"]
+				},
+				"description": "Test duplicate ISBN validation"
+			},
+			"response": []
+		},
+		{
+			"name": "4. Update Book",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Test 1: Status code should be 200",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Test 2: Response should indicate success",
+							"pm.test('Response indicates success', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.message).to.equal('Book updated successfully');",
+							"});",
+							"",
+							"// Test 3: Updated book should be returned",
+							"pm.test('Updated book is returned', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('book');",
+							"});",
+							"",
+							"// Test 4: Book data should be updated",
+							"pm.test('Book data is updated', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.book.title).to.equal('Updated Test Book');",
+							"    pm.expect(jsonData.book.available).to.be.false;",
+							"});",
+							"",
+							"// Test 5: Book should have updated_at timestamp",
+							"pm.test('Book has updated_at timestamp', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.book).to.have.property('updated_at');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"title\": \"Updated Test Book\",\n    \"available\": false\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/books/{{new_book_id}}",
+					"host": ["{{base_url}}"],
+					"path": ["books", "{{new_book_id}}"]
+				},
+				"description": "Update an existing book"
+			},
+			"response": []
+		},
+		{
+			"name": "4b. Update Non-Existent Book",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Test 1: Status code should be 404",
+							"pm.test('Status code is 404 for non-existent book', function () {",
+							"    pm.response.to.have.status(404);",
+							"});",
+							"",
+							"// Test 2: Response should indicate failure",
+							"pm.test('Response indicates book not found', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.false;",
+							"    pm.expect(jsonData.error).to.equal('Book not found');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"title\": \"Updated Book\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/books/99999",
+					"host": ["{{base_url}}"],
+					"path": ["books", "99999"]
+				},
+				"description": "Test update on non-existent book"
+			},
+			"response": []
+		},
+		{
+			"name": "5. Delete Book",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Test 1: Status code should be 200",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Test 2: Response should indicate success",
+							"pm.test('Response indicates success', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.message).to.equal('Book deleted successfully');",
+							"});",
+							"",
+							"// Test 3: Verify book is deleted by trying to get it",
+							"setTimeout(function() {",
+							"    pm.sendRequest({",
+							"        url: pm.environment.get('base_url') + '/books/' + pm.environment.get('new_book_id'),",
+							"        method: 'GET'",
+							"    }, function (err, response) {",
+							"        pm.test('Book no longer exists after deletion', function () {",
+							"            pm.expect(response.code).to.equal(404);",
+							"        });",
+							"    });",
+							"}, 100);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/books/{{new_book_id}}",
+					"host": ["{{base_url}}"],
+					"path": ["books", "{{new_book_id}}"]
+				},
+				"description": "Delete a book from the library"
+			},
+			"response": []
+		},
+		{
+			"name": "5b. Delete Non-Existent Book",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Test 1: Status code should be 404",
+							"pm.test('Status code is 404 for non-existent book', function () {",
+							"    pm.response.to.have.status(404);",
+							"});",
+							"",
+							"// Test 2: Response should indicate failure",
+							"pm.test('Response indicates book not found', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.false;",
+							"    pm.expect(jsonData.error).to.equal('Book not found');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/books/99999",
+					"host": ["{{base_url}}"],
+					"path": ["books", "99999"]
+				},
+				"description": "Test delete on non-existent book"
+			},
+			"response": []
+		},
+		{
+			"name": "6. Filter Books - Available Only",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Test 1: Status code should be 200",
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"// Test 2: All books should be available",
+							"pm.test('All returned books are available', function () {",
+							"    const jsonData = pm.response.json();",
+							"    jsonData.books.forEach(book => {",
+							"        pm.expect(book.available).to.be.true;",
+							"    });",
+							"});",
+							"",
+							"// Test 3: Should have fewer books than total",
+							"pm.test('Filtered results are less than or equal to total', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.count).to.be.at.most(3);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/books?available=true",
+					"host": ["{{base_url}}"],
+					"path": ["books"],
+					"query": [
+						{
+							"key": "available",
+							"value": "true"
+						}
+					]
+				},
+				"description": "Filter books by availability"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000",
+			"type": "string"
+		}
+	]
+}
