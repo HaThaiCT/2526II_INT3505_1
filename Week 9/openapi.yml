@@ -1,0 +1,735 @@
+openapi: 3.0.0
+info:
+  title: Payment API
+  description: |
+    API thanh toán với hỗ trợ versioning (v1 deprecated, v2 current)
+    
+    ## 🚨 DEPRECATION NOTICE
+    
+    **v1 sẽ bị tắt vào 31/12/2026**
+    
+    - Tất cả v1 endpoints đã deprecated
+    - Vui lòng migrate sang v2 trước sunset date
+    - Migration guide: GET /migration-guide
+    
+  version: 2.0.0
+  contact:
+    name: API Support
+    email: api-support@example.com
+  x-api-deprecation:
+    v1:
+      status: deprecated
+      sunset_date: "2026-12-31"
+      alternative_version: v2
+      migration_guide: /migration-guide
+
+servers:
+  - url: http://localhost:5000
+    description: Development server
+
+tags:
+  - name: General
+    description: API information và migration guide
+  - name: v1 - Payments (DEPRECATED)
+    description: ⚠️ DEPRECATED - Sẽ bị tắt 31/12/2026
+    x-deprecated: true
+  - name: v2 - Payments
+    description: ✅ Current version - Khuyến khích sử dụng
+
+paths:
+  /:
+    get:
+      tags:
+        - General
+      summary: API Information
+      description: Thông tin về các API versions
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: Payment API
+                  versions:
+                    type: object
+                    properties:
+                      v1:
+                        $ref: '#/components/schemas/VersionInfo'
+                      v2:
+                        $ref: '#/components/schemas/VersionInfo'
+
+  /migration-guide:
+    get:
+      tags:
+        - General
+      summary: Migration Guide v1 → v2
+      description: Hướng dẫn chi tiết migrate từ v1 sang v2
+      responses:
+        '200':
+          description: Migration guide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationGuide'
+
+  # ==================== V1 ENDPOINTS (DEPRECATED) ====================
+  
+  /api/v1/docs:
+    get:
+      tags:
+        - v1 - Payments (DEPRECATED)
+      summary: v1 API Documentation
+      deprecated: true
+      description: |
+        ⚠️ **DEPRECATED** - Sẽ bị tắt 31/12/2026
+        
+        Vui lòng migrate sang v2
+      responses:
+        '200':
+          description: v1 documentation
+          headers:
+            Deprecation:
+              description: API deprecated flag
+              schema:
+                type: string
+                example: "true"
+            Sunset:
+              description: Sunset date
+              schema:
+                type: string
+                example: "2026-12-31"
+            X-API-Warn:
+              description: Deprecation warning message
+              schema:
+                type: string
+
+  /api/v1/payments:
+    get:
+      tags:
+        - v1 - Payments (DEPRECATED)
+      summary: List payments (v1)
+      deprecated: true
+      description: |
+        ⚠️ **DEPRECATED** - Use GET /api/v2/payments instead
+      responses:
+        '200':
+          description: Success
+          headers:
+            Deprecation:
+              description: API deprecated
+              schema:
+                type: string
+                example: "true"
+            Sunset:
+              schema:
+                type: string
+                example: "2026-12-31"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PaymentV1'
+                  deprecation_warning:
+                    type: string
+    
+    post:
+      tags:
+        - v1 - Payments (DEPRECATED)
+      summary: Create payment (v1)
+      deprecated: true
+      description: |
+        ⚠️ **DEPRECATED** - Use POST /api/v2/payments instead
+        
+        ## Breaking Changes in v2:
+        - `amount` and `currency` → nested `amount: {value, currency}`
+        - `customer_id` and `customer_email` → nested `customer: {id, email}`
+        - `method` → `payment_method: {type, details}`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentV1Input'
+      responses:
+        '201':
+          description: Created
+          headers:
+            Deprecation:
+              schema:
+                type: string
+                example: "true"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/PaymentV1'
+                  deprecation_warning:
+                    type: string
+
+  /api/v1/payments/{paymentId}:
+    get:
+      tags:
+        - v1 - Payments (DEPRECATED)
+      summary: Get payment by ID (v1)
+      deprecated: true
+      parameters:
+        - name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          headers:
+            Deprecation:
+              schema:
+                type: string
+                example: "true"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/PaymentV1'
+
+  # ==================== V2 ENDPOINTS (CURRENT) ====================
+  
+  /api/v2/docs:
+    get:
+      tags:
+        - v2 - Payments
+      summary: v2 API Documentation
+      description: ✅ Current API version documentation
+      responses:
+        '200':
+          description: v2 documentation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: string
+                    example: "2.0.0"
+                  status:
+                    type: string
+                    example: CURRENT
+
+  /api/v2/payments:
+    get:
+      tags:
+        - v2 - Payments
+      summary: List payments (v2)
+      description: |
+        Lấy danh sách payments với enhanced filtering
+        
+        ## New in v2:
+        - Nested object structure
+        - Better query parameters
+        - Enhanced metadata
+      parameters:
+        - name: status
+          in: query
+          description: Filter by payment status
+          schema:
+            type: string
+            enum: [pending, completed, failed, refunded]
+        - name: currency
+          in: query
+          description: Filter by currency
+          schema:
+            type: string
+            enum: [USD, EUR, VND, JPY, GBP]
+        - name: customer_id
+          in: query
+          description: Filter by customer ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PaymentV2'
+                  count:
+                    type: integer
+                  version:
+                    type: string
+                    example: "2.0.0"
+    
+    post:
+      tags:
+        - v2 - Payments
+      summary: Create payment (v2)
+      description: |
+        Tạo payment mới với v2 structure
+        
+        ## New Features:
+        - Idempotency support via Idempotency-Key header
+        - Enhanced payment method details
+        - Customer metadata
+        - Transaction metadata
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          description: Unique key for idempotent requests
+          schema:
+            type: string
+            example: "unique-key-123"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentV2Input'
+            examples:
+              card_payment:
+                summary: Card payment
+                value:
+                  amount:
+                    value: 100.00
+                    currency: USD
+                  customer:
+                    id: CUST123
+                    email: john@example.com
+                    name: John Doe
+                  payment_method:
+                    type: card
+                    details:
+                      card_type: visa
+                      last4: "4242"
+                    provider: stripe
+                  metadata:
+                    order_id: ORD-456
+              bank_transfer:
+                summary: Bank transfer
+                value:
+                  amount:
+                    value: 500.00
+                    currency: EUR
+                  customer:
+                    id: CUST456
+                    email: jane@example.com
+                  payment_method:
+                    type: bank_transfer
+                    details:
+                      iban: DE89370400440532013000
+                    provider: wise
+      responses:
+        '201':
+          description: Payment created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/PaymentV2'
+                  message:
+                    type: string
+                  version:
+                    type: string
+
+  /api/v2/payments/{paymentId}:
+    get:
+      tags:
+        - v2 - Payments
+      summary: Get payment by ID (v2)
+      parameters:
+        - name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/PaymentV2'
+        '404':
+          description: Payment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    put:
+      tags:
+        - v2 - Payments
+      summary: Update payment (v2)
+      parameters:
+        - name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [pending, completed, failed]
+                metadata:
+                  type: object
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/PaymentV2'
+
+  /api/v2/payments/{paymentId}/refund:
+    post:
+      tags:
+        - v2 - Payments
+      summary: Refund payment (NEW in v2)
+      description: |
+        🆕 **New in v2**
+        
+        Hoàn tiền một payment
+      parameters:
+        - name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  description: Refund amount (optional, defaults to full amount)
+                reason:
+                  type: string
+                  description: Refund reason
+      responses:
+        '200':
+          description: Refunded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/PaymentV2'
+
+  /api/v2/payments/{paymentId}/history:
+    get:
+      tags:
+        - v2 - Payments
+      summary: Get payment history (NEW in v2)
+      description: |
+        🆕 **New in v2**
+        
+        Lấy lịch sử thay đổi của payment
+      parameters:
+        - name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  payment_id:
+                    type: string
+                  history:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PaymentHistoryEvent'
+
+# ==================== SCHEMAS ====================
+components:
+  schemas:
+    VersionInfo:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [deprecated, current]
+        sunset_date:
+          type: string
+          format: date
+        base_url:
+          type: string
+        docs:
+          type: string
+
+    MigrationGuide:
+      type: object
+      properties:
+        title:
+          type: string
+        overview:
+          type: string
+        timeline:
+          type: object
+        breaking_changes:
+          type: array
+          items:
+            type: object
+        migration_steps:
+          type: array
+          items:
+            type: string
+
+    # V1 Schemas (Deprecated)
+    PaymentV1:
+      type: object
+      description: ⚠️ DEPRECATED - Use PaymentV2
+      properties:
+        _id:
+          type: string
+        amount:
+          type: number
+          example: 100.00
+        currency:
+          type: string
+          enum: [USD, EUR, VND]
+          example: USD
+        customer_id:
+          type: string
+          example: CUST123
+        customer_email:
+          type: string
+          example: user@example.com
+        method:
+          type: string
+          enum: [card, bank, wallet]
+          example: card
+        status:
+          type: string
+          enum: [pending, completed, failed]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PaymentV1Input:
+      type: object
+      required:
+        - amount
+        - currency
+        - customer_id
+        - method
+      properties:
+        amount:
+          type: number
+        currency:
+          type: string
+          enum: [USD, EUR, VND]
+        customer_id:
+          type: string
+        customer_email:
+          type: string
+        method:
+          type: string
+          enum: [card, bank, wallet]
+
+    # V2 Schemas (Current)
+    PaymentV2:
+      type: object
+      properties:
+        _id:
+          type: string
+        amount:
+          type: object
+          properties:
+            value:
+              type: number
+              example: 100.00
+            currency:
+              type: string
+              enum: [USD, EUR, VND, JPY, GBP]
+              example: USD
+        customer:
+          type: object
+          properties:
+            id:
+              type: string
+              example: CUST123
+            email:
+              type: string
+              example: user@example.com
+            name:
+              type: string
+              example: John Doe
+            phone:
+              type: string
+              example: "+1234567890"
+        payment_method:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [card, bank_transfer, digital_wallet, crypto]
+            details:
+              type: object
+            provider:
+              type: string
+        metadata:
+          type: object
+        status:
+          type: string
+          enum: [pending, completed, failed, refunded]
+        refund:
+          type: object
+          properties:
+            amount:
+              type: number
+            reason:
+              type: string
+            refundedAt:
+              type: string
+              format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PaymentV2Input:
+      type: object
+      required:
+        - amount
+        - customer
+        - payment_method
+      properties:
+        amount:
+          type: object
+          required:
+            - value
+            - currency
+          properties:
+            value:
+              type: number
+              minimum: 0.01
+            currency:
+              type: string
+              enum: [USD, EUR, VND, JPY, GBP]
+        customer:
+          type: object
+          required:
+            - id
+          properties:
+            id:
+              type: string
+            email:
+              type: string
+              format: email
+            name:
+              type: string
+            phone:
+              type: string
+        payment_method:
+          type: object
+          required:
+            - type
+          properties:
+            type:
+              type: string
+              enum: [card, bank_transfer, digital_wallet, crypto]
+            details:
+              type: object
+            provider:
+              type: string
+        metadata:
+          type: object
+
+    PaymentHistoryEvent:
+      type: object
+      properties:
+        event:
+          type: string
+          enum: [created, completed, failed, refunded]
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: string
+        details:
+          type: object
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+        details:
+          type: array
+          items:
+            type: string
+        version:
+          type: string
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+security:
+  - ApiKeyAuth: []

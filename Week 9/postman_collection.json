@@ -1,0 +1,426 @@
+{
+  "info": {
+    "name": "Week 9 - Payment API (v1 & v2)",
+    "description": "Collection để test Payment API với versioning strategy.\nDemo deprecation headers, v1 vs v2 comparison, và migration features.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "General",
+      "item": [
+        {
+          "name": "API Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Migration Guide",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/migration-guide",
+              "host": ["{{baseUrl}}"],
+              "path": ["migration-guide"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "v1 - Payments (DEPRECATED)",
+      "item": [
+        {
+          "name": "v1 Docs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/docs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "docs"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Payments (v1)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Payment (v1 - Flat Structure)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Save payment ID for later use",
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('v1_payment_id', response.data._id);",
+                  "    console.log('v1 Payment ID saved:', response.data._id);",
+                  "}",
+                  "",
+                  "// Check for deprecation headers",
+                  "pm.test('Has Deprecation header', function() {",
+                  "    pm.response.to.have.header('Deprecation');",
+                  "});",
+                  "",
+                  "pm.test('Has Sunset header', function() {",
+                  "    pm.response.to.have.header('Sunset');",
+                  "});",
+                  "",
+                  "pm.test('Has deprecation warning in body', function() {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('deprecation_warning');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100.00,\n  \"currency\": \"USD\",\n  \"customer_id\": \"CUST_POSTMAN_001\",\n  \"customer_email\": \"test@postman.com\",\n  \"method\": \"card\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payment (v1)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments/{{v1_payment_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "payments", "{{v1_payment_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "v2 - Payments (CURRENT)",
+      "item": [
+        {
+          "name": "v2 Docs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/docs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "docs"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Payments (v2)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/payments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "payments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Payments with Filters (v2)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/payments?status=pending&currency=USD",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "payments"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "pending"
+                },
+                {
+                  "key": "currency",
+                  "value": "USD"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Payment (v2 - Nested Structure)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Save payment ID",
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.environment.set('v2_payment_id', response.data._id);",
+                  "    console.log('v2 Payment ID saved:', response.data._id);",
+                  "}",
+                  "",
+                  "// Verify no deprecation headers",
+                  "pm.test('No Deprecation header', function() {",
+                  "    pm.response.to.not.have.header('Deprecation');",
+                  "});",
+                  "",
+                  "pm.test('Has version field', function() {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.version).to.eql('2.0.0');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$randomUUID}}",
+                "description": "Prevents duplicate payments"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": {\n    \"value\": 250.00,\n    \"currency\": \"USD\"\n  },\n  \"customer\": {\n    \"id\": \"CUST_POSTMAN_002\",\n    \"email\": \"customer@postman.com\",\n    \"name\": \"John Postman\",\n    \"phone\": \"+1234567890\"\n  },\n  \"payment_method\": {\n    \"type\": \"card\",\n    \"details\": {\n      \"card_type\": \"visa\",\n      \"last4\": \"4242\"\n    },\n    \"provider\": \"stripe\"\n  },\n  \"metadata\": {\n    \"order_id\": \"ORD-POSTMAN-123\",\n    \"source\": \"postman_test\",\n    \"campaign\": \"api_testing\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/payments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "payments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payment (v2)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/payments/{{v2_payment_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "payments", "{{v2_payment_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Payment (v2)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\",\n  \"metadata\": {\n    \"completed_at\": \"{{$isoTimestamp}}\",\n    \"completed_by\": \"postman_test\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/payments/{{v2_payment_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "payments", "{{v2_payment_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refund Payment (NEW in v2)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100.00,\n  \"reason\": \"Customer request via Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/payments/{{v2_payment_id}}/refund",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "payments", "{{v2_payment_id}}", "refund"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payment History (NEW in v2)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v2/payments/{{v2_payment_id}}/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v2", "payments", "{{v2_payment_id}}", "history"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Compatibility Tests",
+      "item": [
+        {
+          "name": "Create with v1, Read with v2",
+          "item": [
+            {
+              "name": "1. Create Payment (v1)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.environment.set('compat_payment_id', pm.response.json().data._id);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amount\": 150.00,\n  \"currency\": \"EUR\",\n  \"customer_id\": \"CUST_COMPAT\",\n  \"method\": \"wallet\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/payments",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "payments"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "2. Read Same Payment (v2)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v2/payments/{{compat_payment_id}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v2", "payments", "{{compat_payment_id}}"]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Create with v2, Read with v1",
+          "item": [
+            {
+              "name": "1. Create Payment (v2)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.environment.set('compat_payment_id_2', pm.response.json().data._id);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amount\": {\n    \"value\": 180.00,\n    \"currency\": \"GBP\"\n  },\n  \"customer\": {\n    \"id\": \"CUST_COMPAT_2\",\n    \"email\": \"compat2@test.com\"\n  },\n  \"payment_method\": {\n    \"type\": \"bank_transfer\"\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v2/payments",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v2", "payments"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "2. Read Same Payment (v1)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/payments/{{compat_payment_id_2}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "payments", "{{compat_payment_id_2}}"]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    }
+  ]
+}
