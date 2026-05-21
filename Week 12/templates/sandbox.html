@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="card">
+    <h2>Sandbox</h2>
+    <p>Try the demo API here using your API key.</p>
+    <label>API Key<br><input id="api_key"></label><br>
+    <button id="call">Call API</button>
+    <pre id="out"></pre>
+    <script>
+      document.getElementById('call').onclick = async ()=>{
+        const key = document.getElementById('api_key').value;
+        const res = await fetch('/api/demo', {headers: {'X-API-Key': key}});
+        const txt = await res.text();
+        document.getElementById('out').textContent = 'HTTP '+res.status+'\n'+txt;
+      }
+    </script>
+  </div>
+{% endblock %}

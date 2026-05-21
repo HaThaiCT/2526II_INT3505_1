@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="card">
+    <h2>Get started</h2>
+    <p>This demo shows a minimal developer portal, docs, sandbox and a demo API with simple usage tracking and monetization simulation.</p>
+  </div>
+  <div class="card">
+    <h3>Register as Developer</h3>
+    <form action="/register" method="post">
+      <label>Name<br><input name="name" required></label><br>
+      <label>Email<br><input name="email" type="email" required></label><br>
+      <label>Tier<br>
+        <select name="tier"><option value="free">Free</option><option value="pro">Pro</option></select>
+      </label><br><br>
+      <button type="submit">Register</button>
+    </form>
+  </div>
+{% endblock %}

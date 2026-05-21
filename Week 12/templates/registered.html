@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="card">
+    <h2>Registered</h2>
+    <p>Your API key (save it):</p>
+    <pre>{{ api_key }}</pre>
+    <p>Tier: {{ tier }}</p>
+    <p>Try it in <a href="/sandbox">sandbox</a> or call the endpoint: <code>/api/demo?api_key={{ api_key }}</code></p>
+  </div>
+{% endblock %}

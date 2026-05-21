@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="card">
+    <h2>API Documentation (Demo)</h2>
+    <h3>Endpoint</h3>
+    <p><code>GET /api/demo</code></p>
+    <p>Auth: Provide API key in header <code>X-API-Key</code> or as query param <code>?api_key=...</code></p>
+    <h3>Response</h3>
+    <p>200 JSON: {"message":"Hello from Demo API","calls_this_month":n}</p>
+    <h3>Monetization</h3>
+    <p>Free tier: first 100 calls/month. Pro: pay-per-call after limit; price per call: $0.01 (simulated)</p>
+  </div>
+{% endblock %}
